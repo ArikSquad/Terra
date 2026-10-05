@@ -12,16 +12,31 @@ import net.minecraft.world.level.biome.MobSpawnSettings;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 
+import com.dfsek.terra.api.config.ConfigPack;
 import com.dfsek.terra.api.world.biome.generation.BiomeProvider;
 import com.dfsek.terra.api.world.chunk.generation.ChunkGenerator;
 import com.dfsek.terra.api.world.info.WorldProperties;
 import com.dfsek.terra.bukkit.config.PreLoadCompatibilityOptions;
+import com.dfsek.terra.bukkit.nms.NMSBiomeProvider;
+import com.dfsek.terra.bukkit.nms.NMSChunkGeneratorDelegate;
 import com.dfsek.terra.bukkit.nms.NMSStructureBeardifier;
 import com.dfsek.terra.bukkit.nms.NMSVersionBindings;
 import com.dfsek.terra.bukkit.nms.config.VanillaBiomeProperties;
 
 
 public final class Bindings implements NMSVersionBindings {
+    @Override
+    public NMSBiomeProvider createBiomeProvider(BiomeProvider delegate, long seed) {
+        return new BiomeProvider26_3(delegate, seed);
+    }
+
+    @Override
+    public NMSChunkGeneratorDelegate createChunkGenerator(
+        net.minecraft.world.level.chunk.ChunkGenerator vanilla, ConfigPack pack,
+        NMSBiomeProvider biomeProvider, long seed) {
+        return new ChunkGenerator26_3(vanilla, pack, biomeProvider, seed, this);
+    }
+
     @Override
     public void addSpawn(MobSpawnSettings.Builder builder, MobCategory category, EntityType<?> type, int weight,
                          int minCount, int maxCount) {

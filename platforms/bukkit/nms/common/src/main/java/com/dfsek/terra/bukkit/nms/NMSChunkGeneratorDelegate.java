@@ -85,16 +85,20 @@ public class NMSChunkGeneratorDelegate extends ChunkGenerator {
                                                         @NotNull StructureManager structureAccessor, @NotNull ChunkAccess chunk) {
         return vanilla.fillFromNoise(blender, noiseConfig, structureAccessor, chunk)
             .thenApply(c -> {
-                LevelAccessor level = Reflection.STRUCTURE_MANAGER.getLevel(structureAccessor);
-                BiomeProvider biomeProvider = pack.getBiomeProvider();
-                PreLoadCompatibilityOptions compatibilityOptions = pack.getContext().get(PreLoadCompatibilityOptions.class);
-                if(compatibilityOptions.isBeard()) {
-                    bindings.applyStructureBeard(delegate, structureAccessor, chunk,
-                        new com.dfsek.terra.bukkit.world.BukkitWorldProperties(level.getMinecraftWorld().getWorld()),
-                        biomeProvider, compatibilityOptions);
-                }
+                applyStructureBeard(structureAccessor, chunk);
                 return c;
             });
+    }
+
+    protected void applyStructureBeard(StructureManager structureAccessor, ChunkAccess chunk) {
+        LevelAccessor level = Reflection.STRUCTURE_MANAGER.getLevel(structureAccessor);
+        BiomeProvider biomeProvider = pack.getBiomeProvider();
+        PreLoadCompatibilityOptions compatibilityOptions = pack.getContext().get(PreLoadCompatibilityOptions.class);
+        if(compatibilityOptions.isBeard()) {
+            bindings.applyStructureBeard(delegate, structureAccessor, chunk,
+                new com.dfsek.terra.bukkit.world.BukkitWorldProperties(level.getMinecraftWorld().getWorld()),
+                biomeProvider, compatibilityOptions);
+        }
     }
 
     @Override
@@ -112,7 +116,7 @@ public class NMSChunkGeneratorDelegate extends ChunkGenerator {
         WorldProperties properties = new NMSWorldProperties(seed, world);
         int y = properties.getMaxHeight();
         BiomeProvider biomeProvider = pack.getBiomeProvider();
-        while(y >= getMinY() && !heightmap.isOpaque().test(
+        while(y > properties.getMinHeight() && !heightmap.isOpaque().test(
             ((CraftBlockData) delegate.getBlock(properties, x, y - 1, z, biomeProvider).getHandle()).getState())) {
             y--;
         }
@@ -124,11 +128,11 @@ public class NMSChunkGeneratorDelegate extends ChunkGenerator {
         BlockState[] array = new BlockState[world.getHeight()];
         WorldProperties properties = new NMSWorldProperties(seed, world);
         BiomeProvider biomeProvider = pack.getBiomeProvider();
-        for(int y = properties.getMaxHeight(); y >= properties.getMinHeight(); y--) {
+        for(int y = properties.getMaxHeight() - 1; y >= properties.getMinHeight(); y--) {
             array[y - properties.getMinHeight()] = ((CraftBlockData) delegate.getBlock(properties, x, y, z, biomeProvider)
                 .getHandle()).getState();
         }
-        return new NoiseColumn(getMinY(), array);
+        return new NoiseColumn(properties.getMinHeight(), array);
     }
 
     @Override

@@ -26,7 +26,7 @@ public final class NMSStructureBeardifier {
         for(int x = 0; x < 16; x++) {
             for(int z = 0; z < 16; z++) {
                 int depth = 0;
-                for(int y = world.getMaxHeight(); y >= world.getMinHeight(); y--) {
+                for(int y = world.getMaxHeight() - 1; y >= world.getMinHeight(); y--) {
                     int worldX = x + chunkX;
                     int worldZ = z + chunkZ;
                     double density = sampler.sample(worldX, y, worldZ);

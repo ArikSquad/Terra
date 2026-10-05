@@ -35,29 +35,32 @@ public class NMSInjectListener implements Listener {
         if(!INJECTED.contains(event.getWorld()) &&
            event.getWorld().getGenerator() instanceof BukkitChunkGeneratorWrapper bukkitChunkGeneratorWrapper) {
             INJECT_LOCK.lock();
-            INJECTED.add(event.getWorld());
-            LOGGER.info("Preparing to take over the world: {}", event.getWorld().getName());
-            CraftWorld craftWorld = (CraftWorld) event.getWorld();
-            ServerLevel serverWorld = craftWorld.getHandle();
+            try {
+                LOGGER.info("Preparing to take over the world: {}", event.getWorld().getName());
+                CraftWorld craftWorld = (CraftWorld) event.getWorld();
+                ServerLevel serverWorld = craftWorld.getHandle();
 
-            ConfigPack pack = bukkitChunkGeneratorWrapper.getPack();
+                ConfigPack pack = bukkitChunkGeneratorWrapper.getPack();
 
-            ChunkGenerator vanilla = serverWorld.getChunkSource().getGenerator();
-            NMSBiomeProvider provider = new NMSBiomeProvider(pack.getBiomeProvider(), craftWorld.getSeed());
-            ChunkMap chunkMap = serverWorld.getChunkSource().chunkMap;
-            WorldGenContext worldGenContext = Reflection.CHUNKMAP.getWorldGenContext(chunkMap);
-            Reflection.CHUNKMAP.setWorldGenContext(chunkMap, new WorldGenContext(
-                worldGenContext.level(),
-                new NMSChunkGeneratorDelegate(vanilla, pack, provider, craftWorld.getSeed(), bindings),
-                worldGenContext.structureManager(),
-                worldGenContext.lightEngine(),
-                worldGenContext.mainThreadExecutor(),
-                worldGenContext.unsavedListener()
-            ));
+                ChunkGenerator vanilla = serverWorld.getChunkSource().getGenerator();
+                NMSBiomeProvider provider = bindings.createBiomeProvider(pack.getBiomeProvider(), craftWorld.getSeed());
+                ChunkMap chunkMap = serverWorld.getChunkSource().chunkMap;
+                WorldGenContext worldGenContext = Reflection.CHUNKMAP.getWorldGenContext(chunkMap);
+                Reflection.CHUNKMAP.setWorldGenContext(chunkMap, new WorldGenContext(
+                    worldGenContext.level(),
+                    bindings.createChunkGenerator(vanilla, pack, provider, craftWorld.getSeed()),
+                    worldGenContext.structureManager(),
+                    worldGenContext.lightEngine(),
+                    worldGenContext.mainThreadExecutor(),
+                    worldGenContext.unsavedListener()
+                ));
 
-            LOGGER.info("Successfully injected into world.");
+                INJECTED.add(event.getWorld());
+                LOGGER.info("Successfully injected into world.");
 
-            INJECT_LOCK.unlock();
+            } finally {
+                INJECT_LOCK.unlock();
+            }
         }
     }
 }

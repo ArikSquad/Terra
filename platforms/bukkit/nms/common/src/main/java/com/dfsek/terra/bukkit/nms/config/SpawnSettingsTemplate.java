@@ -22,11 +22,11 @@ public class SpawnSettingsTemplate implements ObjectTemplate<MobSpawnSettings> {
 
     @Value("spawns")
     @Default
-    private List<SpawnTypeConfig> spawns = null;
+    private List<SpawnTypeConfig> spawns = List.of();
 
     @Value("costs")
     @Default
-    private List<SpawnCostConfig> costs = null;
+    private List<SpawnCostConfig> costs = List.of();
 
     @Value("probability")
     @Default
